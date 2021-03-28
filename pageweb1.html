@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+<style>
+  body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+  #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 50%; height: 3rem; display: flex; box-sizing: border-box; backdrop-filter: blur(10px); }
+  #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
+  #input:focus { outline: none; }
+  #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+
+  #messages { list-style-type: none; margin: 0; padding: 0; }
+  #messages > li { padding: 0.5rem 1rem; }
+  #messages > li:nth-child(odd) { background: #efefef; }
+
+  #chatbox { list-style-type: none; margin: 0; padding: 0; left: 0; right: 50%; position: absolute; max-height: 85%; overflow: scroll;}
+  #chatbox > li { padding: 0.5rem 1rem; right: 50%;}
+  #chatbox > li:nth-child(odd) { background: #efefef; right: 50%;}
+
+  #startButton {
+  display: block;
+  cursor: pointer;
+  outline: none;
+  border: none;
+  background-color: #92DE34;
+  width: 200px;
+  height: 40px;
+  border-radius: 30px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+  background-size: 100% 100%;
+  box-shadow: 0 0 0 7px #92DE34 inset;
+  margin-bottom: 15px;
+  }
+
+  #passButton {
+  display: block;
+  cursor: pointer;
+  outline: none;
+  border: none;
+  background-color: #0099FF;
+  width: 200px;
+  height: 40px;
+  border-radius: 30px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+  background-size: 100% 100%;
+  box-shadow: 0 0 0 7px #0099FF inset;
+  margin-bottom: 15px;
+  }
+
+</style>
+
+<title>Jeux de Dames</title>
+</head>
+<body>
+
+  <center>
+    <div style="float: left;">
+      <button id="startButton">Start</button>
+    </div style="float: right;">
+    <div align="center">
+      <p><span class="Style1" style="font-size: 2em; font-weight: bold;">Jeux de Dames</span></p>
+    </div>
+  </center>
+
+  <div id="maDivGauche" style="float:left">
+    <div id="chatbox" style="font-weight: bold">CHAT</div>
+
+    <ul id="messages"></ul>
+    <form id="form" action="">
+      <input id="input" autocomplete="off" /><button>Send</button>
+    </form>
+  </div>
+
+  <div id="maDivDroite" style="float:right; clear:right; position: relative; right: 5%">
+    <center>
+      <table id='game_table'cellspacing="0" style="border-spacing: 0"></table>
+      <div>
+        <button id='passButton'>Pass</button>
+      </div>
+    </center>
+  </div>
+
+</body>
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+
+  var socket = io();
+
+  //chargement  et initialisation de la page
+  socket.emit('data');
+
+  //différentes fonctions et évenements
+  function getCoordWithId(string_id) {
+    array = string_id.match(/\d+/g);
+    //console.log(array);
+    return {'i': parseInt(array[0]), 'j': parseInt(array[1])}
+  }
+
+  function getIdWithNumber(number) {
+    let i = parseInt(number/10);
+    let j = number%10;
+    return 'row'+i+'col'+j
+  }
+
+  function getElementWithCoord(i,j) {
+    return document.getElementById('row'+i+'col'+j);
+  }
+
+  var isSelected = false;
+  var selectedId;
+
+  //évenement sur le click pour bouger les pions
+  table = document.getElementById('game_table');
+  table.addEventListener('click', (e) => {
+    let target = e.target;
+    if (target.nodeName == 'IMG') {
+      parent = target.parentNode;
+      if (isSelected) {
+        if (selectedId == parent.id) {
+          isSelected = false;
+        }
+        else {
+          console.log(selectedId);
+          let i1 = getCoordWithId(selectedId).i;
+          let j1 = getCoordWithId(selectedId).j;
+          let i2 = getCoordWithId(parent.id).i;
+          let j2 = getCoordWithId(parent.id).j;
+          socket.emit('move', {'i1': i1, 'j1': j1, 'i2': i2, 'j2': j2 }); //emission du socket 'move' pour demande au serveur
+          console.log({'i1': i1, 'j1': j1, 'i2': i2, 'j2': j2 });
+          isSelected = false;
+        }
+      }
+      else {
+        selectedId = parent.id;
+        console.log(selectedId);
+        isSelected = true;
+      }
+    }
+    else {
+      isSelected = false;
+    }
+  })
+
+  //fonction pour faire un move sur le damier avec ses données
+  function do_move(sended_data) {
+    element1 = getElementWithCoord(sended_data.i1, sended_data.j1);
+    element2 = getElementWithCoord(sended_data.i2, sended_data.j2);
+
+    //cas coup simple reçu
+    if (sended_data.issue == 'simple') {
+
+      src = element1.firstChild.src;
+      element1.firstChild.src = 'images/gray';
+
+      //si transformation
+      if (sended_data.transform == true) {
+        switch (sended_data.player) {
+          case 'player1':
+            element2.firstChild.src = 'images/meD1';
+            break;
+          case 'player2':
+            element2.firstChild.src = 'images/youD1';
+        }
+      }
+      else {
+        element2.firstChild.src = src;
+      }
+    };
+
+    //cas coup attaque reçu
+    if (sended_data.issue == 'eaten') {
+      element_eaten = getElementWithCoord(sended_data.posEaten.i, sended_data.posEaten.j);
+
+      src = element1.firstChild.src;
+      element1.firstChild.src = 'images/gray';
+      element_eaten.firstChild.src = 'images/gray';
+      if (sended_data.transform == true) {
+        switch (sended_data.player) {
+          case 'player1':
+            element2.firstChild.src = 'images/meD1';
+            break;
+          case 'player2':
+            element2.firstChild.src = 'images/youD1';
+        }
+      }
+      else {
+        element2.firstChild.src = src;
+      }
+    }
+  };
+
+  //ajout de l'évènement 'start' pour le bouton start
+  button = document.getElementById('startButton');
+  button.addEventListener('click', (e) => {
+    console.log('startButton clicked');
+    socket.emit('start');
+  });
+
+  //ajout de l'évènement 'pass' pour le bouton Pass
+  button = document.getElementById('passButton');
+  button.addEventListener('click', (e) => {
+    console.log('passButton clicked');
+    socket.emit('pass');
+  });
+
+
+  //partie plus socket
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (input.value) {
+      socket.emit('chat message', input.value);
+      input.value = '';
+    }
+  });
+
+  socket.on('data', function(data) {
+    for (i=0; i<10; i++) {
+      row = document.createElement('tr');
+      row.setAttribute('id', 'row' + i);
+      table = document.getElementById('game_table');
+      table.appendChild(row);
+
+      for (j=0; j<10; j++) {
+        element = document.createElement('td');
+        element.setAttribute('id','row'+i+'col'+j);
+        row.appendChild(element);
+
+        img = document.createElement('img');
+        img.setAttribute('width','100%')
+        switch (data[i][j]) {
+          case -1:
+            img.setAttribute('src', 'images/you1');
+            break
+          case 1:
+            img.setAttribute('src', 'images/me1');
+            break
+          case 0:
+            if (Math.pow(-1,i+j) == 1) {
+              img.setAttribute('src', 'images/gray');
+            }
+            else {
+              img.setAttribute('src', 'images/black');
+            }
+        };
+        element.appendChild(img);
+      }
+    }
+  })
+
+  socket.on('chat message', function(msg) {
+    var item = document.createElement('li');
+    if ((new RegExp('^Joueur 1 :')).test(msg)) {
+      item.setAttribute('style','color:blue');
+    }
+    if ((new RegExp('^Joueur 2 :')).test(msg)) {
+      item.setAttribute('style','color:red');
+    }
+    console.log((new RegExp('/^[info]:/')).test(msg));
+    console.log(msg);
+    if ((new RegExp('^\[info\]:')).test(msg)) {
+      item.setAttribute('style','color:#E4E019; font-weight:bold');
+    }
+    item.textContent = msg;
+    chatbox = document.getElementById("chatbox");
+    chatbox.appendChild(item);
+    chatbox.scrollTop = chatbox.scrollHeight;
+  });
+
+  socket.on('move', function(sended_data) { //reception du socket 'move'
+    do_move(sended_data);
+  })
+
+</script>
