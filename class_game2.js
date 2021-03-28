@@ -325,10 +325,10 @@ class Game {
 
 	isWon(player) {
 		switch (player) {
-			case game.player1:
+			case this.player1:
 				return this.eaten1 == 20;
 				break
-			case game.player2:
+			case this.player2:
 				return this.eaten2 == 20;
 		}
 	}
