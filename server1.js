@@ -59,6 +59,7 @@ io.on('connection', (socket) => {
     socket.emit('data',game.data_game);
   });
 
+  //gestion du démarrage de la partie
   socket.on('start', () => {
     //permet à la partie de commencer si les deux joueurs sont prêts
     //mieux que /start
