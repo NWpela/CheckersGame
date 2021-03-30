@@ -12,6 +12,9 @@ class Game {
 		this.readyPlayer1 = false;
 		this.readyPlayer2 = false;
 
+		this.reloadPlayer1 = false;
+		this.reloadPlayer2 = false;
+
 		this.blows = [];
 
 		this.data_game = [[-1, 0, -1, 0, -1, 0, -1, 0, -1, 0],
@@ -90,6 +93,16 @@ class Game {
 		}
 	}
 
+	getOtherPlayer(player) {
+		switch (player) {
+			case this.player1:
+				return this.player2;
+				break
+			case this.player2:
+				return this.player1;
+		}
+	}
+
 	move(player,p1i,p1j,p2i,p2j) {
 		if (this.validSelection(player, p1i, p1j)) {
 			//sélection valide
@@ -149,25 +162,30 @@ class Game {
 						if (Math.abs(p1i-p2i) == Math.abs(p1j-p2j)) {
 							//le coup est valide
 							var posList = this.NbBetween(player, p1i, p1j, p2i, p2j);
-							if (posList.length == 0) {
-								//pas de pion mangé
-								this.data_game[p1i][p1j] = 0;
-								this.data_game[p2i][p2j] = 2;
-								return {'player': 'player1', 'issue': 'simple', 'transform': false, 'pieceType': 'dame'};
-							}
-							if (posList.length == 1) {
-								//présence d'un pion
-								this.data_game[p1i][p1j] = 0;
-								this.data_game[p2i][p2j] = 2;
-								this.data_game[posList[0].i][posList[0].j] = 0;
-								this.eaten1 += 1;
-								if (this.isWon(player)) {
-									return {'player': 'player1', 'issue': 'eaten', 'transform': false, 'posEaten': posList[0], 'pieceType': 'dame', 'win': 'player1'};
+							if (this.NbBetween(this.getOtherPlayer(player), p1i, p1j, p2i, p2j).length == 1) {
+								if (posList.length == 0) {
+									//pas de pion mangé
+									this.data_game[p1i][p1j] = 0;
+									this.data_game[p2i][p2j] = 2;
+									return {'player': 'player1', 'issue': 'simple', 'transform': false, 'pieceType': 'dame'};
 								}
-								return {'player': 'player1', 'issue': 'eaten', 'transform': false, 'posEaten': posList[0], 'pieceType': 'dame'};
+								if (posList.length == 1) {
+									//présence d'un pion
+									this.data_game[p1i][p1j] = 0;
+									this.data_game[p2i][p2j] = 2;
+									this.data_game[posList[0].i][posList[0].j] = 0;
+									this.eaten1 += 1;
+									if (this.isWon(player)) {
+										return {'player': 'player1', 'issue': 'eaten', 'transform': false, 'posEaten': posList[0], 'pieceType': 'dame', 'win': 'player1'};
+									}
+									return {'player': 'player1', 'issue': 'eaten', 'transform': false, 'posEaten': posList[0], 'pieceType': 'dame'};
+								}
+								//trop de pions présents
+								console.log('[Move]: Too much adverse pieces NbBetween '+p1i+','+p1j+' and '+p2i+','+p2j);
+								return false;
 							}
-							//trop de pions présents
-							console.log('[Move]: Too much pieces NbBetween '+p1i+','+p1j+' and '+p2i+','+p2j);
+							//présence de pions alliés
+							console.log('[Move]: Allies pieces present between '+p1i+','+p1j+' and '+p2i+','+p2j);
 							return false;
 						}
 						console.log('[Move]: Impossible move with a dame');
@@ -230,25 +248,30 @@ class Game {
 						if (Math.abs(p1i-p2i) == Math.abs(p1j-p2j)) {
 							//le coup est valide
 							var posList = this.NbBetween(player, p1i, p1j, p2i, p2j);
-							if (posList.length == 0) {
-								//pas de pion mangé
-								this.data_game[p1i][p1j] = 0;
-								this.data_game[p2i][p2j] = -2;
-								return {'player': 'player2', 'issue': 'simple', 'transform': false, 'pieceType': 'dame'};
-							}
-							if (posList.length == 1) {
-								//présence d'un pion
-								this.data_game[p1i][p1j] = 0;
-								this.data_game[p2i][p2j] = -2;
-								this.data_game[posList[0].i][posList[0].j] = 0;
-								this.eaten2 += 1;
-								if (this.isWon(player)) {
-									return {'player': 'player2', 'issue': 'eaten', 'transform': false, 'posEaten': posList[0], 'pieceType': 'dame', 'win': 'player2'};
+							if (this.NbBetween(this.getOtherPlayer(player), p1i, p1j, p2i, p2j).length == 1) {
+								if (posList.length == 0) {
+									//pas de pion mangé
+									this.data_game[p1i][p1j] = 0;
+									this.data_game[p2i][p2j] = -2;
+									return {'player': 'player2', 'issue': 'simple', 'transform': false, 'pieceType': 'dame'};
 								}
-								return {'player': 'player2', 'issue': 'eaten', 'transform': false, 'posEaten': posList[0], 'pieceType': 'dame'};
+								if (posList.length == 1) {
+									//présence d'un pion
+									this.data_game[p1i][p1j] = 0;
+									this.data_game[p2i][p2j] = -2;
+									this.data_game[posList[0].i][posList[0].j] = 0;
+									this.eaten2 += 1;
+									if (this.isWon(player)) {
+										return {'player': 'player2', 'issue': 'eaten', 'transform': false, 'posEaten': posList[0], 'pieceType': 'dame', 'win': 'player2'};
+									}
+									return {'player': 'player2', 'issue': 'eaten', 'transform': false, 'posEaten': posList[0], 'pieceType': 'dame'};
+								}
+								//trop de pions présents
+								console.log('[Move]: Too much pieces NbBetween '+p1i+','+p1j+' and '+p2i+','+p2j);
+								return false;
 							}
-							//trop de pions présents
-							console.log('[Move]: Too much pieces NbBetween '+p1i+','+p1j+' and '+p2i+','+p2j);
+							//présence de pions alliés
+							console.log('[Move]: Allies pieces present between '+p1i+','+p1j+' and '+p2i+','+p2j);
 							return false;
 						}
 						console.log('[Move]: Impossible move with a dame');
@@ -289,7 +312,10 @@ class Game {
 							//coup valide
 							if (this.NbBetween(player,p1i,p1j,p2i,p2j).length == 1) {
 								//présence d'un unique pion ennemi
-								return true
+								if (this.NbBetween(this.getOtherPlayer,p1i,p1j,p2i,p2j).length == 1) {
+									//pas de pions alliés
+									return true
+								}
 							}
 						}
 					}
@@ -312,7 +338,10 @@ class Game {
 							//coup valide
 							if (this.NbBetween(player,p1i,p1j,p2i,p2j).length == 1) {
 								//présence d'un unique pion ennemi
-								return true
+								if (this.NbBetween(this.getOtherPlayer,p1i,p1j,p2i,p2j).length == 1) {
+									//pas de pions alliés
+									return true
+								}
 							}
 						}
 					}
@@ -333,14 +362,33 @@ class Game {
 		}
 	}
 
-	//on rajoute une métode test
+	reload() {
+		this.eaten1 = 0;
+		this.eaten2 = 0;
+		this.status = 'stoped';
+		this.turn = 'player1';
+		this.readyPlayer1 = false;
+		this.readyPlayer2 = false;
+		this.reloadPlayer1 = false;
+		this.reloadPlayer2 = false;
+		this.blows = [];
+		this.data_game = [[-1, 0, -1, 0, -1, 0, -1, 0, -1, 0],
+					 	[0, -1, 0, -1, 0, -1, 0, -1, 0, -1],
+					 	[-1, 0, -1, 0, -1, 0, -1, 0, -1, 0],
+					 	[0, -1, 0, -1, 0, -1, 0, -1, 0, -1],
+					 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+					 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+					 	[1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+					 	[0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+					 	[1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+					 	[0, 1, 0, 1, 0, 1, 0, 1, 0, 1]];
+	}
+
 	test() {
-		return "gali galou"
+		return "turtle"
 	}
 
 
 }
-
-
 
 module.exports.Game2 = Game;

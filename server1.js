@@ -5,7 +5,6 @@ const Game = require('./class_game2.js').Game2; //importation de la classe Game
 
 //déclaration des variables essentielles
 var game = new Game(undefined,undefined);
-var started = false;
 
 //partie routage middleware
 app.get('/', (req, res) => {
@@ -33,9 +32,7 @@ app.get('/images/:image', function(req,res){
       break;
   }
 });
-app.get('/data', (req,res) => {
-  res.send(game.data_game);
-});
+
 
 //partie socket
 io.on('connection', (socket) => {
@@ -124,14 +121,30 @@ io.on('connection', (socket) => {
 
 
   socket.on('chat message', (msg) => {
-    //écrit dans le chat pour tout le monde
-    switch (socket.id) {
+    if (msg == '/reload') {
+      switch (socket.id) {
+        case game.player1:
+          game.reloadPlayer1 = true;
+          break
+        case game.player2:
+          game.reloadPlayer2 = true;
+      };
+      if (game.reloadPlayer1 && game.reloadPlayer2) {
+        game.reload();
+        io.emit('data',game.data_game);
+        io.emit('chat message', 'La partie a été réinitialisée, appuyez sur "Start" pour rejouer');
+      }
+    }
+    else {
+      //écrit dans le chat pour tout le monde
+      switch (socket.id) {
         case game.player1:
           io.emit('chat message', 'Joueur 1 : ' + msg);
           break
         case game.player2:
           io.emit('chat message', 'Joueur 2 : ' + msg);
-    };
+      };
+    }
   });
 
   socket.on('move', (data) => { //on reçoit data de la forme {'i1': i1, 'j1': j1, 'i2': i2, 'j2': j2 } (1 vers 2)

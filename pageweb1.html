@@ -221,10 +221,15 @@
   });
 
   socket.on('data', function(data) {
+    //on enlève (si il existe) l'ancien damier
+    table = document.getElementById('game_table');
+    while (table.firstChild) {
+        table.removeChild(table.firstChild);
+    };
+    //on en crée un nouveau
     for (i=0; i<10; i++) {
       row = document.createElement('tr');
       row.setAttribute('id', 'row' + i);
-      table = document.getElementById('game_table');
       table.appendChild(row);
 
       for (j=0; j<10; j++) {
@@ -275,6 +280,6 @@
 
   socket.on('move', function(sended_data) { //reception du socket 'move'
     do_move(sended_data);
-  })
+  });
 
 </script>
