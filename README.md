@@ -1,6 +1,6 @@
 # Checkers Game
 
-![alt text](images\Image1.png)
+![alt text](images/Image1.png)
 
 ## Introduction
 This project implements a multiplayer checkers game, based on a javascript server running under Node.js. This server uses the Express and Socket.io modules, allowing it to respond asynchronously to the different requests from the two players present. The web application allows two players to compete against each other during a game managed by the server, the interface also allows players to communicate via chat during their game.
