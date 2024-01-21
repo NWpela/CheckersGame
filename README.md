@@ -4,8 +4,6 @@
   <img src="images/Image1.png"/>
 </p>
 
-![alt text](images/Image1.png)
-
 ## Introduction
 This project implements a multiplayer checkers game, based on a javascript server running under Node.js.
 
